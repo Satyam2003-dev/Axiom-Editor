@@ -2,7 +2,13 @@
 
 All notable Axiom Editor changes will be documented here.
 
-## [0.1.0] - Unreleased
+## [0.1.1] - 2026-08-22
+
+### Fixed
+
+- Fixed Linux x64 remote-server release packaging by using the non-mangling compiler for non-minified builds.
+
+## [0.1.0] - 2026-08-22
 
 ### Changed
 

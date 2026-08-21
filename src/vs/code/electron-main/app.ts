@@ -127,8 +127,10 @@ import ErrorTelemetry from '../../platform/telemetry/electron-main/errorTelemetr
 // ignore the eslint errors below
 import { IMetricsService } from '../../workbench/contrib/axiom/common/metricsService.js';
 import { IAxiomUpdateService } from '../../workbench/contrib/axiom/common/axiomUpdateService.js';
+import { ILocalModelService } from '../../workbench/contrib/axiom/common/localModelService.js';
 import { MetricsMainService } from '../../workbench/contrib/axiom/electron-main/metricsMainService.js';
 import { AxiomMainUpdateService } from '../../workbench/contrib/axiom/electron-main/axiomUpdateMainService.js';
+import { LocalModelMainService } from '../../workbench/contrib/axiom/electron-main/localModelMainService.js';
 import { LLMMessageChannel } from '../../workbench/contrib/axiom/electron-main/sendLLMMessageChannel.js';
 import { AxiomSCMService } from '../../workbench/contrib/axiom/electron-main/axiomSCMMainService.js';
 import { IAxiomSCMService } from '../../workbench/contrib/axiom/common/axiomSCMTypes.js';
@@ -1104,6 +1106,7 @@ export class CodeApplication extends Disposable {
 		// Axiom main process services (required for services with a channel for comm between browser and electron-main (node))
 		services.set(IMetricsService, new SyncDescriptor(MetricsMainService, undefined, false));
 		services.set(IAxiomUpdateService, new SyncDescriptor(AxiomMainUpdateService, undefined, false));
+		services.set(ILocalModelService, new SyncDescriptor(LocalModelMainService, undefined, false));
 		services.set(IAxiomSCMService, new SyncDescriptor(AxiomSCMService, undefined, false));
 
 		// Default Extensions Profile Init
@@ -1242,6 +1245,9 @@ export class CodeApplication extends Disposable {
 
 		const axiomUpdatesChannel = ProxyChannel.fromService(accessor.get(IAxiomUpdateService), disposables);
 		mainProcessElectronServer.registerChannel('axiom-channel-update', axiomUpdatesChannel);
+
+		const localModelsChannel = ProxyChannel.fromService(accessor.get(ILocalModelService), disposables);
+		mainProcessElectronServer.registerChannel('axiom-channel-localModels', localModelsChannel);
 
 		const sendLLMMessageChannel = new LLMMessageChannel(accessor.get(IMetricsService));
 		mainProcessElectronServer.registerChannel('axiom-channel-llmMessage', sendLLMMessageChannel);

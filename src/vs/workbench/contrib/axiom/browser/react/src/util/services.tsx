@@ -21,6 +21,7 @@ import { IThemeService } from '../../../../../../../platform/theme/common/themeS
 import { ILLMMessageService } from '../../../../common/sendLLMMessageService.js';
 import { IRefreshModelService } from '../../../../../../../workbench/contrib/axiom/common/refreshModelService.js';
 import { IAxiomSettingsService } from '../../../../../../../workbench/contrib/axiom/common/axiomSettingsService.js';
+import { ILocalModelService } from '../../../../../../../workbench/contrib/axiom/common/localModelService.js';
 import { IExtensionTransferService } from '../../../../../../../workbench/contrib/axiom/browser/extensionTransferService.js'
 
 import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js'
@@ -194,6 +195,7 @@ const getReactAccessor = (accessor: ServicesAccessor) => {
 		ILLMMessageService: accessor.get(ILLMMessageService),
 		IRefreshModelService: accessor.get(IRefreshModelService),
 		IAxiomSettingsService: accessor.get(IAxiomSettingsService),
+		ILocalModelService: accessor.get(ILocalModelService),
 		IEditCodeService: accessor.get(IEditCodeService),
 		IChatThreadService: accessor.get(IChatThreadService),
 

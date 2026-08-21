@@ -14,7 +14,8 @@ Releases contain a Windows x64 user installer and a portable ZIP. Published buil
 ## Highlights
 
 - Agent, chat, quick-edit, and autocomplete workflows inside the editor
-- Bring your own model provider, including local providers such as Ollama
+- Local Model Center with Ollama and LM Studio detection, catalog downloads, GGUF URL imports, progress, and cancellation
+- Bring your own OpenAI-compatible server, including vLLM and other local or remote runtimes
 - Streaming diffs with accept/reject controls
 - Model Context Protocol (MCP) tool support
 - Direct provider requests; Axiom Editor does not operate a proxy that retains prompts
@@ -35,6 +36,16 @@ npm run compile
 ```
 
 Use `npm run watch` instead of `npm run compile` while developing.
+
+## Local models
+
+Open **Settings → Models → Local Model Center**. Axiom detects Ollama and LM Studio servers at the endpoints configured under **Local Providers**, lists installed models, and makes completed downloads available to Chat, Apply, Ctrl+K, SCM, and Autocomplete through the existing model selectors.
+
+- **Ollama:** pull a registry model such as `qwen2.5-coder:7b` through the Ollama API.
+- **LM Studio:** download an exact GGUF or MLX result through `lms get`; include a quantization such as `@q4_k_m` to avoid an interactive choice. Use **Load (max GPU)** when LM Studio's JIT model loading is disabled.
+- **Any GGUF:** provide a direct HTTP(S) `.gguf` URL and a model name. Axiom downloads it into its managed user-data model directory and imports it using the selected local runtime.
+
+Install and start [Ollama](https://ollama.com/download) or open [LM Studio](https://lmstudio.ai/) once before using its CLI. MLX is offered only on Apple Silicon. On Windows and Linux, the runtime normally chooses CUDA when an NVIDIA GPU is available; Linux may instead use ROCm, Vulkan, or CPU depending on the installed hardware and runtime.
 
 ## Contributing
 

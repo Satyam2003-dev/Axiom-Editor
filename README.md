@@ -2,14 +2,18 @@
 
 An open-source, privacy-minded AI code editor built on Code - OSS. Axiom Editor continues the useful ideas from the discontinued Void project under a new identity, an in-repository Windows release pipeline, and a contributor-friendly workflow.
 
-![Axiom Editor logo](./resources/branding/axiom-master.png)
+<p align="center">
+  <img src="./resources/branding/axiom-master.png" alt="Axiom Editor logo" width="360">
+</p>
 
 ## Download for Windows
 
-- Stable builds: [GitHub Releases](https://github.com/Satyam2003-dev/Axiom-Editor/releases)
+- **[Download the latest Windows installer](https://github.com/Satyam2003-dev/Axiom-Editor/releases/latest/download/Axiom-Editor-windows-x64-user-setup.exe)**
+- [Download the latest portable ZIP](https://github.com/Satyam2003-dev/Axiom-Editor/releases/latest/download/Axiom-Editor-windows-x64-portable.zip)
+- [All versions and release notes](https://github.com/Satyam2003-dev/Axiom-Editor/releases)
 - Development builds: open the latest successful [Windows Build](https://github.com/Satyam2003-dev/Axiom-Editor/actions/workflows/windows-build.yml) run and download the artifact
 
-Releases contain a Windows x64 user installer and a portable ZIP. Published builds are currently unsigned, so Windows SmartScreen may show a warning. Verify that the download came from this repository before running it.
+Every update to `main` produces development artifacts. Version tags publish a permanent release containing a Windows x64 user installer, portable ZIP, Linux remote-server archive, release notes, and SHA-256 checksums. Published builds are currently unsigned, so Windows SmartScreen may show a warning. Verify that the download came from this repository before running it.
 
 ## Highlights
 

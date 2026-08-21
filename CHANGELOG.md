@@ -2,6 +2,14 @@
 
 All notable Axiom Editor changes will be documented here.
 
+## [0.1.4] - 2026-08-22
+
+### Changed
+
+- Adopted the new Axiom logo across Windows, macOS, Linux, server, installer, and in-app branding assets.
+- Run downloadable development builds for every update to `main` and publish permanent releases for version tags.
+- Include SHA-256 checksums with every GitHub Release.
+
 ## [0.1.3] - 2026-08-22
 
 ### Fixed

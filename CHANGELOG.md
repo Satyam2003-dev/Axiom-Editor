@@ -2,6 +2,12 @@
 
 All notable Axiom Editor changes will be documented here.
 
+## [0.1.2] - 2026-08-22
+
+### Fixed
+
+- Build the generated React UI modules before compiling the Linux x64 remote-server release.
+
 ## [0.1.1] - 2026-08-22
 
 ### Fixed

@@ -72,6 +72,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y build-essential g++ libx11-dev libxkbfile-dev libsecret-1-dev libkrb5-dev python-is-python3
       - name: Install dependencies
         run: npm ci
+      - name: Build React UI
+        run: npm run buildreact
       - name: Build Linux x64 remote server
         run: npm run gulp vscode-reh-linux-x64
       - name: Package remote server

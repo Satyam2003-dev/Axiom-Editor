@@ -1,8 +1,8 @@
 {
 	"nameShort": "Axiom Editor",
 	"nameLong": "Axiom Editor",
-	"axiomVersion": "0.1.1",
-	"release": "v0.1.1",
+	"axiomVersion": "0.1.2",
+	"release": "v0.1.2",
 	"applicationName": "axiom-editor",
 	"dataFolderName": ".axiom-editor",
 	"win32MutexName": "axiomeditor",

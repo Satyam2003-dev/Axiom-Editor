@@ -102,4 +102,5 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: gh release create "${{ github.ref_name }}" artifacts/* --generate-notes --verify-tag --title "Axiom Editor ${{ github.ref_name }}"

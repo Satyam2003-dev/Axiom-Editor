@@ -2,6 +2,12 @@
 
 All notable Axiom Editor changes will be documented here.
 
+## [0.1.3] - 2026-08-22
+
+### Fixed
+
+- Provide explicit repository context when publishing a GitHub Release from the artifact-only release job.
+
 ## [0.1.2] - 2026-08-22
 
 ### Fixed

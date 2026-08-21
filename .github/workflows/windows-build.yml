@@ -1,0 +1,103 @@
+name: Windows Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows-x64:
+    runs-on: windows-2022
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build React UI
+        run: npm run buildreact
+      - name: Build Windows x64 application
+        run: npm run gulp vscode-win32-x64
+      - name: Add updater and build user installer
+        run: |
+          npm run gulp vscode-win32-x64-inno-updater
+          npm run gulp vscode-win32-x64-user-setup
+      - name: Package artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          Compress-Archive -Path "..\VSCode-win32-x64\*" -DestinationPath "artifacts\Axiom-Editor-windows-x64-portable.zip" -CompressionLevel Optimal
+          $setup = Get-ChildItem ".build\win32-x64\user-setup" -Filter "*.exe" -Recurse | Select-Object -First 1
+          if (-not $setup) { throw "Windows installer was not produced." }
+          Copy-Item $setup.FullName "artifacts\Axiom-Editor-windows-x64-user-setup.exe"
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Axiom-Editor-windows-x64
+          path: artifacts/*
+          if-no-files-found: error
+      - name: Validate release version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: |
+          $product = Get-Content product.json -Raw | ConvertFrom-Json
+          $expected = "v$($product.axiomVersion)"
+          if ("${{ github.ref_name }}" -ne $expected) { throw "Tag must be $expected to match product.json." }
+
+  server-linux-x64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential g++ libx11-dev libxkbfile-dev libsecret-1-dev libkrb5-dev python-is-python3
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Linux x64 remote server
+        run: npm run gulp vscode-reh-linux-x64
+      - name: Package remote server
+        run: |
+          mkdir -p artifacts
+          version=$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).version")
+          tar -czf "artifacts/axiom-reh-linux-x64-${version}.tar.gz" -C ../vscode-reh-linux-x64 .
+      - name: Upload remote server artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Axiom-Editor-server-linux-x64
+          path: artifacts/*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [windows-x64, server-linux-x64]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Axiom-Editor-*
+          path: artifacts
+          merge-multiple: true
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" artifacts/* --generate-notes --verify-tag --title "Axiom Editor ${{ github.ref_name }}"

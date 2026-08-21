@@ -27,7 +27,7 @@ import { ThemeIcon } from '../../../../base/common/themables.js';
 import { IExplorerService } from './files.js';
 import { Codicon } from '../../../../base/common/codicons.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { VOID_OPEN_SETTINGS_ACTION_ID } from '../../void/browser/voidSettingsPane.js';
+import { AXIOM_OPEN_SETTINGS_ACTION_ID } from '../../axiom/browser/axiomSettingsPane.js';
 
 // Contribute Global Actions
 
@@ -677,12 +677,12 @@ for (const menuId of [MenuId.EmptyEditorGroupContext, MenuId.EditorTabsBarContex
 // File menu
 
 
-// Void added this:
+// Axiom added this:
 MenuRegistry.appendMenuItem(MenuId.MenubarFileMenu, {
-	group: '0_void',
+	group: '0_axiom',
 	command: {
-		id: VOID_OPEN_SETTINGS_ACTION_ID,
-		title: nls.localize({ key: 'openVoid', comment: ['&& denotes a mnemonic'] }, "&&Open Void Settings"),
+		id: AXIOM_OPEN_SETTINGS_ACTION_ID,
+		title: nls.localize({ key: 'openAxiom', comment: ['&& denotes a mnemonic'] }, "&&Open Axiom Settings"),
 	},
 	order: 1
 });

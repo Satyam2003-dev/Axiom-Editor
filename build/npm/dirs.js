@@ -54,8 +54,8 @@ const dirs = [
 	'test/smoke',
 	'.vscode/extensions/vscode-selfhost-import-aid',
 	'.vscode/extensions/vscode-selfhost-test-provider',
-	'extensions/open-remote-ssh', // Void added this
-	'extensions/open-remote-wsl', // Void added this
+	'extensions/open-remote-ssh', // Axiom added this
+	'extensions/open-remote-wsl', // Axiom added this
 
 ];
 

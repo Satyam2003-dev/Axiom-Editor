@@ -22,7 +22,7 @@ fi
 # Enable BuildKit
 export DOCKER_BUILDKIT=1
 
-BUILD_IMAGE_NAME="void-appimage-builder"
+BUILD_IMAGE_NAME="axiom-appimage-builder"
 
 # Check if Docker is running
 if ! docker info >/dev/null 2>&1; then
@@ -46,7 +46,7 @@ if [ ! -f "appimagetool" ]; then
 fi
 
 # Delete any existing AppImage to avoid bloating the build
-rm -f Void-x86_64.AppImage
+rm -f Axiom-x86_64.AppImage
 
 # Create build Dockerfile
 echo "Creating build Dockerfile..."
@@ -101,68 +101,68 @@ docker build --no-cache -t "$BUILD_IMAGE_NAME" -f Dockerfile.build .
 echo "Creating AppImage..."
 docker run --rm --privileged -v "$(pwd):/app" "$BUILD_IMAGE_NAME" bash -c '
 cd /app && \
-rm -rf VoidApp.AppDir && \
-mkdir -p VoidApp.AppDir/usr/bin VoidApp.AppDir/usr/lib VoidApp.AppDir/usr/share/applications && \
-find . -maxdepth 1 ! -name VoidApp.AppDir ! -name "." ! -name ".." -exec cp -r {} VoidApp.AppDir/usr/bin/ \; && \
-cp void.png VoidApp.AppDir/ && \
-echo "[Desktop Entry]" > VoidApp.AppDir/void.desktop && \
-echo "Name=Void" >> VoidApp.AppDir/void.desktop && \
-echo "Comment=Open source AI code editor." >> VoidApp.AppDir/void.desktop && \
-echo "GenericName=Text Editor" >> VoidApp.AppDir/void.desktop && \
-echo "Exec=void %F" >> VoidApp.AppDir/void.desktop && \
-echo "Icon=void" >> VoidApp.AppDir/void.desktop && \
-echo "Type=Application" >> VoidApp.AppDir/void.desktop && \
-echo "StartupNotify=false" >> VoidApp.AppDir/void.desktop && \
-echo "StartupWMClass=Void" >> VoidApp.AppDir/void.desktop && \
-echo "Categories=TextEditor;Development;IDE;" >> VoidApp.AppDir/void.desktop && \
-echo "MimeType=application/x-void-workspace;" >> VoidApp.AppDir/void.desktop && \
-echo "Keywords=void;" >> VoidApp.AppDir/void.desktop && \
-echo "Actions=new-empty-window;" >> VoidApp.AppDir/void.desktop && \
-echo "[Desktop Action new-empty-window]" >> VoidApp.AppDir/void.desktop && \
-echo "Name=New Empty Window" >> VoidApp.AppDir/void.desktop && \
-echo "Name[de]=Neues leeres Fenster" >> VoidApp.AppDir/void.desktop && \
-echo "Name[es]=Nueva ventana vacía" >> VoidApp.AppDir/void.desktop && \
-echo "Name[fr]=Nouvelle fenêtre vide" >> VoidApp.AppDir/void.desktop && \
-echo "Name[it]=Nuova finestra vuota" >> VoidApp.AppDir/void.desktop && \
-echo "Name[ja]=新しい空のウィンドウ" >> VoidApp.AppDir/void.desktop && \
-echo "Name[ko]=새 빈 창" >> VoidApp.AppDir/void.desktop && \
-echo "Name[ru]=Новое пустое окно" >> VoidApp.AppDir/void.desktop && \
-echo "Name[zh_CN]=新建空窗口" >> VoidApp.AppDir/void.desktop && \
-echo "Name[zh_TW]=開新空視窗" >> VoidApp.AppDir/void.desktop && \
-echo "Exec=void --new-window %F" >> VoidApp.AppDir/void.desktop && \
-echo "Icon=void" >> VoidApp.AppDir/void.desktop && \
-chmod +x VoidApp.AppDir/void.desktop && \
-cp VoidApp.AppDir/void.desktop VoidApp.AppDir/usr/share/applications/ && \
-echo "[Desktop Entry]" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "Name=Void - URL Handler" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "Comment=Open source AI code editor." > VoidApp.AppDir/void-url-handler.desktop && \
-echo "GenericName=Text Editor" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "Exec=void --open-url %U" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "Icon=void" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "Type=Application" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "NoDisplay=true" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "StartupNotify=true" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "Categories=Utility;TextEditor;Development;IDE;" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "MimeType=x-scheme-handler/void;" > VoidApp.AppDir/void-url-handler.desktop && \
-echo "Keywords=void;" > VoidApp.AppDir/void-url-handler.desktop && \
-chmod +x VoidApp.AppDir/void-url-handler.desktop && \
-cp VoidApp.AppDir/void-url-handler.desktop VoidApp.AppDir/usr/share/applications/ && \
-echo "#!/bin/bash" > VoidApp.AppDir/AppRun && \
-echo "HERE=\$(dirname \"\$(readlink -f \"\${0}\")\")" >> VoidApp.AppDir/AppRun && \
-echo "export PATH=\${HERE}/usr/bin:\${PATH}" >> VoidApp.AppDir/AppRun && \
-echo "export LD_LIBRARY_PATH=\${HERE}/usr/lib:\${LD_LIBRARY_PATH}" >> VoidApp.AppDir/AppRun && \
-echo "exec \${HERE}/usr/bin/void --no-sandbox \"\$@\"" >> VoidApp.AppDir/AppRun && \
-chmod +x VoidApp.AppDir/AppRun && \
-chmod -R 755 VoidApp.AppDir && \
+rm -rf AxiomApp.AppDir && \
+mkdir -p AxiomApp.AppDir/usr/bin AxiomApp.AppDir/usr/lib AxiomApp.AppDir/usr/share/applications && \
+find . -maxdepth 1 ! -name AxiomApp.AppDir ! -name "." ! -name ".." -exec cp -r {} AxiomApp.AppDir/usr/bin/ \; && \
+cp axiom.png AxiomApp.AppDir/ && \
+echo "[Desktop Entry]" > AxiomApp.AppDir/axiom.desktop && \
+echo "Name=Axiom" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Comment=Open source AI code editor." >> AxiomApp.AppDir/axiom.desktop && \
+echo "GenericName=Text Editor" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Exec=axiom-editor %F" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Icon=axiom" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Type=Application" >> AxiomApp.AppDir/axiom.desktop && \
+echo "StartupNotify=false" >> AxiomApp.AppDir/axiom.desktop && \
+echo "StartupWMClass=Axiom" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Categories=TextEditor;Development;IDE;" >> AxiomApp.AppDir/axiom.desktop && \
+echo "MimeType=application/x-axiom-workspace;" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Keywords=axiom;" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Actions=new-empty-window;" >> AxiomApp.AppDir/axiom.desktop && \
+echo "[Desktop Action new-empty-window]" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name=New Empty Window" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name[de]=Neues leeres Fenster" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name[es]=Nueva ventana vacía" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name[fr]=Nouvelle fenêtre vide" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name[it]=Nuova finestra vuota" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name[ja]=新しい空のウィンドウ" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name[ko]=새 빈 창" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name[ru]=Новое пустое окно" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name[zh_CN]=新建空窗口" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Name[zh_TW]=開新空視窗" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Exec=axiom-editor --new-window %F" >> AxiomApp.AppDir/axiom.desktop && \
+echo "Icon=axiom" >> AxiomApp.AppDir/axiom.desktop && \
+chmod +x AxiomApp.AppDir/axiom.desktop && \
+cp AxiomApp.AppDir/axiom.desktop AxiomApp.AppDir/usr/share/applications/ && \
+echo "[Desktop Entry]" > AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "Name=Axiom - URL Handler" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "Comment=Open source AI code editor." >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "GenericName=Text Editor" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "Exec=axiom-editor --open-url %U" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "Icon=axiom" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "Type=Application" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "NoDisplay=true" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "StartupNotify=true" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "Categories=Utility;TextEditor;Development;IDE;" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "MimeType=x-scheme-handler/axiom;" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+echo "Keywords=axiom;" >> AxiomApp.AppDir/axiom-url-handler.desktop && \
+chmod +x AxiomApp.AppDir/axiom-url-handler.desktop && \
+cp AxiomApp.AppDir/axiom-url-handler.desktop AxiomApp.AppDir/usr/share/applications/ && \
+echo "#!/bin/bash" > AxiomApp.AppDir/AppRun && \
+echo "HERE=\$(dirname \"\$(readlink -f \"\${0}\")\")" >> AxiomApp.AppDir/AppRun && \
+echo "export PATH=\${HERE}/usr/bin:\${PATH}" >> AxiomApp.AppDir/AppRun && \
+echo "export LD_LIBRARY_PATH=\${HERE}/usr/lib:\${LD_LIBRARY_PATH}" >> AxiomApp.AppDir/AppRun && \
+echo "exec \${HERE}/usr/bin/axiom-editor --no-sandbox \"\$@\"" >> AxiomApp.AppDir/AppRun && \
+chmod +x AxiomApp.AppDir/AppRun && \
+chmod -R 755 AxiomApp.AppDir && \
 
 # Strip unneeded symbols from the binary to reduce size
-strip --strip-unneeded VoidApp.AppDir/usr/bin/void
+strip --strip-unneeded AxiomApp.AppDir/usr/bin/axiom-editor
 
-ls -la VoidApp.AppDir/ && \
-ARCH=x86_64 ./appimagetool -n VoidApp.AppDir Void-x86_64.AppImage
+ls -la AxiomApp.AppDir/ && \
+ARCH=x86_64 ./appimagetool -n AxiomApp.AppDir Axiom-x86_64.AppImage
 '
 
 # Clean up
-rm -rf VoidApp.AppDir .dockerignore appimagetool
+rm -rf AxiomApp.AppDir .dockerignore appimagetool
 
-echo "AppImage creation complete! Your AppImage is: Void-x86_64.AppImage"
+echo "AppImage creation complete! Your AppImage is: Axiom-x86_64.AppImage"

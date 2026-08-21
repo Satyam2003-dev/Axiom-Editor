@@ -2,18 +2,13 @@
 
 # README
 
-This is a community-made AppImage creation script.
-
-There are some reported bugs with it.
-
-To generate an AppImage yourself, feel free to look at
-stable-linux.yml in the separate `void-builder/` repo,
-which runs a GitHub Action that builds the AppImage you see on our website.
+This is an experimental community AppImage creation script. Windows x64 is the
+officially automated desktop release target; see `.github/workflows/windows-build.yml`.
 
 
-# Void AppImage Creation Script
+# Axiom AppImage Creation Script
 
-This script automates the process of creating an AppImage for the  Void Editor using Docker. It works on macOS and Linux platforms.
+This script automates the process of creating an AppImage for the  Axiom Editor using Docker. It works on macOS and Linux platforms.
 ## Requirements
 
 *   **Docker:** The script relies on Docker to build the AppImage inside a container.
@@ -87,8 +82,8 @@ These dependencies are installed within the Docker container (Ubuntu 20.04 base)
     Copy the following files to the directory where the app binary is being bundled (created during the build process):
 
     *   `create_appimage.sh`
-    *   `void.desktop`
-    *   `void.png`
+    *   `axiom.desktop`
+    *   `axiom.png`
 
 4.  **Run the Script:**
 
@@ -98,7 +93,7 @@ These dependencies are installed within the Docker container (Ubuntu 20.04 base)
 
 5.  **Result:**
 
-    After the script completes, it will generate an AppImage named `Void-x86_64.AppImage` (or similar, depending on your architecture) in the current directory.
+    After the script completes, it will generate an AppImage named `Axiom-x86_64.AppImage` (or similar, depending on your architecture) in the current directory.
 
 ## Script Overview
 
@@ -109,9 +104,9 @@ These dependencies are installed within the Docker container (Ubuntu 20.04 base)
 *   **Dockerfile Creation:** Creates a temporary `Dockerfile.build` for the Ubuntu-based environment.
 *   **Docker Image Build:** Builds a Docker image and runs the build process.
 *   **AppImage Creation:**
-    *   Creates the `VoidApp.AppDir` structure.
+    *   Creates the `AxiomApp.AppDir` structure.
     *   Copies binaries, resources, and the `.desktop` entry.
-    *   Copies `void.desktop` and `void.png`.
+    *   Copies `axiom.desktop` and `axiom.png`.
     *   Strips unnecessary symbols from the binary.
     *   Runs `appimagetool` to generate the AppImage.
 *   **Cleanup:** Removes the temporary `Dockerfile.build`.

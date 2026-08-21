@@ -1,1 +1,5 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Satyam2003-dev/Axiom-Editor/security/advisories/new
+    about: Report security issues privately instead of opening a public issue.

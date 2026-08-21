@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a reproducible problem in Axiom Editor
+title: "[Bug]: "
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to help improve Axiom Editor.
+  - type: input
+    id: version
+    attributes:
+      label: Axiom Editor version
+      description: Open Help > About and paste the Axiom and Code - OSS versions.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Windows x64, Windows ARM64, macOS, Linux, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Include the expected result and the actual result.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      placeholder: "1. Open ...\n2. Run ...\n3. Observe ..."
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Remove API keys, source code, and other sensitive data first.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched for existing reports.
+          required: true
+        - label: I removed secrets and private data from this report.
+          required: true

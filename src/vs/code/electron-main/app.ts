@@ -125,14 +125,14 @@ import ErrorTelemetry from '../../platform/telemetry/electron-main/errorTelemetr
 
 // in theory this is not allowed
 // ignore the eslint errors below
-import { IMetricsService } from '../../workbench/contrib/void/common/metricsService.js';
-import { IVoidUpdateService } from '../../workbench/contrib/void/common/voidUpdateService.js';
-import { MetricsMainService } from '../../workbench/contrib/void/electron-main/metricsMainService.js';
-import { VoidMainUpdateService } from '../../workbench/contrib/void/electron-main/voidUpdateMainService.js';
-import { LLMMessageChannel } from '../../workbench/contrib/void/electron-main/sendLLMMessageChannel.js';
-import { VoidSCMService } from '../../workbench/contrib/void/electron-main/voidSCMMainService.js';
-import { IVoidSCMService } from '../../workbench/contrib/void/common/voidSCMTypes.js';
-import { MCPChannel } from '../../workbench/contrib/void/electron-main/mcpChannel.js';
+import { IMetricsService } from '../../workbench/contrib/axiom/common/metricsService.js';
+import { IAxiomUpdateService } from '../../workbench/contrib/axiom/common/axiomUpdateService.js';
+import { MetricsMainService } from '../../workbench/contrib/axiom/electron-main/metricsMainService.js';
+import { AxiomMainUpdateService } from '../../workbench/contrib/axiom/electron-main/axiomUpdateMainService.js';
+import { LLMMessageChannel } from '../../workbench/contrib/axiom/electron-main/sendLLMMessageChannel.js';
+import { AxiomSCMService } from '../../workbench/contrib/axiom/electron-main/axiomSCMMainService.js';
+import { IAxiomSCMService } from '../../workbench/contrib/axiom/common/axiomSCMTypes.js';
+import { MCPChannel } from '../../workbench/contrib/axiom/electron-main/mcpChannel.js';
 /**
  * The main VS Code application. There will only ever be one instance,
  * even if the user starts many instances (e.g. from the command line).
@@ -1101,10 +1101,10 @@ export class CodeApplication extends Disposable {
 			services.set(ITelemetryService, NullTelemetryService);
 		}
 
-		// Void main process services (required for services with a channel for comm between browser and electron-main (node))
+		// Axiom main process services (required for services with a channel for comm between browser and electron-main (node))
 		services.set(IMetricsService, new SyncDescriptor(MetricsMainService, undefined, false));
-		services.set(IVoidUpdateService, new SyncDescriptor(VoidMainUpdateService, undefined, false));
-		services.set(IVoidSCMService, new SyncDescriptor(VoidSCMService, undefined, false));
+		services.set(IAxiomUpdateService, new SyncDescriptor(AxiomMainUpdateService, undefined, false));
+		services.set(IAxiomSCMService, new SyncDescriptor(AxiomSCMService, undefined, false));
 
 		// Default Extensions Profile Init
 		services.set(IExtensionsProfileScannerService, new SyncDescriptor(ExtensionsProfileScannerService, undefined, true));
@@ -1236,23 +1236,23 @@ export class CodeApplication extends Disposable {
 		mainProcessElectronServer.registerChannel('logger', loggerChannel);
 		sharedProcessClient.then(client => client.registerChannel('logger', loggerChannel));
 
-		// Void - use loggerChannel as reference
+		// Axiom - use loggerChannel as reference
 		const metricsChannel = ProxyChannel.fromService(accessor.get(IMetricsService), disposables);
-		mainProcessElectronServer.registerChannel('void-channel-metrics', metricsChannel);
+		mainProcessElectronServer.registerChannel('axiom-channel-metrics', metricsChannel);
 
-		const voidUpdatesChannel = ProxyChannel.fromService(accessor.get(IVoidUpdateService), disposables);
-		mainProcessElectronServer.registerChannel('void-channel-update', voidUpdatesChannel);
+		const axiomUpdatesChannel = ProxyChannel.fromService(accessor.get(IAxiomUpdateService), disposables);
+		mainProcessElectronServer.registerChannel('axiom-channel-update', axiomUpdatesChannel);
 
 		const sendLLMMessageChannel = new LLMMessageChannel(accessor.get(IMetricsService));
-		mainProcessElectronServer.registerChannel('void-channel-llmMessage', sendLLMMessageChannel);
+		mainProcessElectronServer.registerChannel('axiom-channel-llmMessage', sendLLMMessageChannel);
 
-		// Void added this
-		const voidSCMChannel = ProxyChannel.fromService(accessor.get(IVoidSCMService), disposables);
-		mainProcessElectronServer.registerChannel('void-channel-scm', voidSCMChannel);
+		// Axiom added this
+		const axiomSCMChannel = ProxyChannel.fromService(accessor.get(IAxiomSCMService), disposables);
+		mainProcessElectronServer.registerChannel('axiom-channel-scm', axiomSCMChannel);
 
-		// Void added this
+		// Axiom added this
 		const mcpChannel = new MCPChannel();
-		mainProcessElectronServer.registerChannel('void-channel-mcp', mcpChannel);
+		mainProcessElectronServer.registerChannel('axiom-channel-mcp', mcpChannel);
 
 		// Extension Host Debug Broadcasting
 		const electronExtensionHostDebugBroadcastChannel = new ElectronExtensionHostDebugBroadcastChannel(accessor.get(IWindowsMainService));

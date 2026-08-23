@@ -2,6 +2,15 @@
 
 All notable Axiom Editor changes will be documented here.
 
+## [0.1.5] - 2026-08-23
+
+### Added
+
+- Add first-class `llama.cpp` local provider support through `llama-server` for local GGUF models.
+- Add Local Model Center controls for starting a GGUF with `llama-server` and selecting it for chat.
+- Add Hermes Agent setup guidance for using Axiom's local OpenAI-compatible endpoint.
+- Publish Linux desktop, Linux remote-server, and macOS app archive release assets alongside Windows builds.
+
 ## [0.1.4] - 2026-08-22
 
 ### Changed

@@ -22,6 +22,9 @@ export const defaultProviderSettings = {
 	ollama: {
 		endpoint: 'http://127.0.0.1:11434',
 	},
+	llamaCpp: {
+		endpoint: 'http://127.0.0.1:8080',
+	},
 	vLLM: {
 		endpoint: 'http://localhost:8000',
 	},
@@ -111,6 +114,7 @@ export const defaultModelsOfProvider = {
 	],
 	ollama: [ // autodetected
 	],
+	llamaCpp: [], // autodetected
 	vLLM: [ // autodetected
 	],
 	lmStudio: [], // autodetected
@@ -1243,6 +1247,15 @@ const ollamaSettings: AxiomStaticProviderInfo = {
 	},
 }
 
+const llamaCppSettings: AxiomStaticProviderInfo = {
+	modelOptionsFallback: (modelName) => extensiveModelOptionsFallback(modelName, { downloadable: { sizeGb: 'not-known' } }),
+	modelOptions: {},
+	providerReasoningIOSettings: {
+		input: { includeInPayload: openAICompatIncludeInPayloadReasoning },
+		output: { needsManualParse: true },
+	},
+}
+
 const openaiCompatible: AxiomStaticProviderInfo = {
 	modelOptionsFallback: (modelName) => extensiveModelOptionsFallback(modelName),
 	modelOptions: {},
@@ -1465,6 +1478,7 @@ const modelSettingsOfProvider: { [providerName in ProviderName]: AxiomStaticProv
 	openRouter: openRouterSettings,
 	vLLM: vLLMSettings,
 	ollama: ollamaSettings,
+	llamaCpp: llamaCppSettings,
 	openAICompatible: openaiCompatible,
 	mistral: mistralSettings,
 

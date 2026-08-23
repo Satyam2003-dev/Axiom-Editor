@@ -1,8 +1,8 @@
 {
 	"nameShort": "Axiom Editor",
 	"nameLong": "Axiom Editor",
-	"axiomVersion": "0.1.4",
-	"release": "v0.1.4",
+	"axiomVersion": "0.1.5",
+	"release": "v0.1.5",
 	"applicationName": "axiom-editor",
 	"dataFolderName": ".axiom-editor",
 	"win32MutexName": "axiomeditor",
@@ -41,6 +41,8 @@
 	"builtInExtensions": [],
 	"linkProtectionTrustedDomains": [
 		"https://github.com/Satyam2003-dev/Axiom-Editor",
-		"https://ollama.com"
+		"https://ollama.com",
+		"https://github.com/ggml-org/llama.cpp",
+		"https://hermes-agent.nousresearch.com"
 	]
 }

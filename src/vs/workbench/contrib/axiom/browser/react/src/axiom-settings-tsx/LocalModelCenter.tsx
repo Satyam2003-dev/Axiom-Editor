@@ -18,10 +18,12 @@ const bytes = (value?: number) => {
 	return `${size.toFixed(unit < 2 ? 0 : 1)} ${units[unit]}`;
 };
 
+const runtimeTitle = (runtime: LocalModelRuntime) => runtime === 'ollama' ? 'Ollama' : runtime === 'lmStudio' ? 'LM Studio' : 'llama.cpp';
+
 const RuntimeCard = ({ state, onUse }: { state: LocalModelManagerState['runtimes'][number]; onUse: (model: string) => void }) => (
 	<div className='border border-axiom-border-2 bg-axiom-bg-1 rounded p-3 min-w-0'>
 		<div className='flex items-center justify-between gap-3'>
-			<div className='font-medium'>{state.runtime === 'ollama' ? 'Ollama' : 'LM Studio'}</div>
+			<div className='font-medium'>{runtimeTitle(state.runtime)}</div>
 			<span className={`text-xs ${state.available ? 'text-green-500' : 'text-axiom-fg-3'}`}>
 				{state.available ? 'Server online' : state.cliAvailable ? 'CLI installed' : 'Not detected'}
 			</span>
@@ -46,6 +48,7 @@ export const LocalModelCenter = () => {
 	const settings = useSettingsState();
 	const ollamaEndpoint = settings.settingsOfProvider.ollama.endpoint;
 	const lmStudioEndpoint = settings.settingsOfProvider.lmStudio.endpoint;
+	const llamaCppEndpoint = settings.settingsOfProvider.llamaCpp.endpoint;
 	const [state, setState] = useState<LocalModelManagerState>();
 	const [loadingState, setLoadingState] = useState(true);
 	const [operation, setOperation] = useState<LocalModelOperationProgress>();
@@ -57,13 +60,15 @@ export const LocalModelCenter = () => {
 	const [ggufURL, setGGUFURL] = useState('');
 	const [ggufName, setGGUFName] = useState('my-model');
 	const [ggufRuntime, setGGUFRuntime] = useState<LocalModelRuntime>('ollama');
+	const [llamaCppPath, setLlamaCppPath] = useState('');
+	const [llamaCppName, setLlamaCppName] = useState('local-gguf');
 
 	const refresh = useCallback(async () => {
 		setLoadingState(true);
-		try { setState(await service.getState(ollamaEndpoint, lmStudioEndpoint)); setError(undefined); }
+		try { setState(await service.getState(ollamaEndpoint, lmStudioEndpoint, llamaCppEndpoint)); setError(undefined); }
 		catch (err) { setError(err instanceof Error ? err.message : String(err)); }
 		finally { setLoadingState(false); }
-	}, [service, ollamaEndpoint, lmStudioEndpoint]);
+	}, [service, ollamaEndpoint, lmStudioEndpoint, llamaCppEndpoint]);
 
 	useEffect(() => { void refresh(); }, [refresh]);
 	useEffect(() => {
@@ -71,9 +76,9 @@ export const LocalModelCenter = () => {
 		return () => disposable.dispose();
 	}, [service]);
 
-	const run = useCallback(async (label: string, provider: 'ollama' | 'lmStudio', fn: () => Promise<void>) => {
+	const run = useCallback(async (label: string, provider: LocalModelRuntime, fn: () => Promise<void>) => {
 		setError(undefined); setSuccess(undefined);
-		setOperation({ kind: provider === 'ollama' ? 'ollama-pull' : 'lmstudio-download', status: 'Starting…' });
+		setOperation({ kind: provider === 'ollama' ? 'ollama-pull' : provider === 'llamaCpp' ? 'llamacpp-start' : 'lmstudio-download', status: 'Starting...' });
 		try {
 			await fn();
 			setSuccess(`${label} is ready to use.`);
@@ -95,7 +100,7 @@ export const LocalModelCenter = () => {
 		<div className='flex items-start justify-between gap-4'>
 			<div>
 				<h3 className='text-lg font-medium'>Local Model Center</h3>
-				<p className='text-sm text-axiom-fg-3 mt-1'>Download and run real local models through Ollama or LM Studio. Models stay on your machine.</p>
+				<p className='text-sm text-axiom-fg-3 mt-1'>Download and run real local models through Ollama, LM Studio, or llama.cpp. Models stay on your machine.</p>
 			</div>
 			<button className='p-1.5 rounded hover:bg-axiom-bg-2' disabled={loadingState || !!operation} onClick={() => void refresh()} title='Detect runtimes again'>
 				<RefreshCw className={`size-4 ${loadingState ? 'animate-spin' : ''}`} />
@@ -140,6 +145,18 @@ export const LocalModelCenter = () => {
 			</div>
 
 			<div>
+				<div className='text-sm font-medium mb-2'>llama.cpp GGUF runtime</div>
+				<div className='text-xs text-axiom-fg-3 mb-2'>Install llama.cpp, then point Axiom at a local .gguf file. Axiom starts <span className='font-mono'>llama-server</span> on localhost and exposes it in model selectors.</div>
+				<div className='grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-2 mb-2'>
+					<AxiomSimpleInputBox value={llamaCppPath} onChangeValue={setLlamaCppPath} placeholder='C:\\Models\\qwen2.5-coder.Q4_K_M.gguf' disabled={!!operation} />
+					<AxiomSimpleInputBox value={llamaCppName} onChangeValue={setLlamaCppName} placeholder='Model alias' disabled={!!operation} />
+				</div>
+				<AxiomButtonBgDarken disabled={!!operation || !llamaCppPath || !state?.runtimes.find(r => r.runtime === 'llamaCpp')?.cliAvailable} onClick={() => void run(llamaCppName, 'llamaCpp', () => service.startLlamaCppModel(llamaCppEndpoint, llamaCppPath, llamaCppName))}>
+					<Cpu className='size-3.5 mr-2' /> Start llama-server
+				</AxiomButtonBgDarken>
+			</div>
+
+			<div>
 				<div className='text-sm font-medium mb-2'>Import any GGUF URL</div>
 				<div className='grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-2 mb-2'>
 					<AxiomSimpleInputBox value={ggufURL} onChangeValue={setGGUFURL} placeholder='https://…/model.Q4_K_M.gguf' disabled={!!operation} />
@@ -147,13 +164,18 @@ export const LocalModelCenter = () => {
 				</div>
 				<div className='flex gap-2'>
 					<select className='bg-axiom-bg-1 border border-axiom-border-2 rounded px-2 text-xs flex-1' value={ggufRuntime} disabled={!!operation} onChange={event => setGGUFRuntime(event.target.value as LocalModelRuntime)}>
-						<option value='ollama'>Import into Ollama</option><option value='lmStudio'>Import into LM Studio</option>
+						<option value='ollama'>Import into Ollama</option><option value='lmStudio'>Import into LM Studio</option><option value='llamaCpp'>Save for llama.cpp</option>
 					</select>
 					<AxiomButtonBgDarken disabled={!!operation || !ggufURL || !selectedRuntime?.cliAvailable} onClick={() => void run(ggufName, ggufRuntime, () => service.downloadAndImportGGUF(ggufURL, ggufName, ggufRuntime, ollamaEndpoint))}>
 						<Download className='size-3.5 mr-2' /> Download & import
 					</AxiomButtonBgDarken>
 				</div>
 				{state && <div className='text-xs text-axiom-fg-3 mt-2'>Managed downloads: {state.modelDirectory}</div>}
+			</div>
+
+			<div className='border border-axiom-border-2 bg-axiom-bg-1 rounded p-3'>
+				<div className='text-sm font-medium mb-2'>Hermes Agent setup</div>
+				<div className='text-xs text-axiom-fg-3'>Install Hermes Agent, then run <span className='font-mono'>hermes setup</span>, <span className='font-mono'>hermes model</span>, and <span className='font-mono'>hermes tools</span>. For local inference, choose an OpenAI-compatible provider and use Axiom's llama.cpp endpoint <span className='font-mono'>{llamaCppEndpoint.replace(/\/+$/, '')}/v1</span>.</div>
 			</div>
 		</div>
 

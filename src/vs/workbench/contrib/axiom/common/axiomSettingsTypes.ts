@@ -16,7 +16,7 @@ type UnionOfKeys<T> = T extends T ? keyof T : never;
 export type ProviderName = keyof typeof defaultProviderSettings
 export const providerNames = Object.keys(defaultProviderSettings) as ProviderName[]
 
-export const localProviderNames = ['ollama', 'vLLM', 'lmStudio'] satisfies ProviderName[] // all local names
+export const localProviderNames = ['ollama', 'llamaCpp', 'vLLM', 'lmStudio'] satisfies ProviderName[] // all local names
 export const nonlocalProviderNames = providerNames.filter((name) => !(localProviderNames as string[]).includes(name)) // all non-local names
 
 type CustomSettingName = UnionOfKeys<typeof defaultProviderSettings[ProviderName]>
@@ -73,6 +73,9 @@ export const displayInfoOfProviderName = (providerName: ProviderName): DisplayIn
 	else if (providerName === 'ollama') {
 		return { title: 'Ollama', }
 	}
+	else if (providerName === 'llamaCpp') {
+		return { title: 'llama.cpp', }
+	}
 	else if (providerName === 'vLLM') {
 		return { title: 'vLLM', }
 	}
@@ -125,6 +128,7 @@ export const subTextMdOfProviderName = (providerName: ProviderName): string => {
 	if (providerName === 'microsoftAzure') return 'Read more about endpoints [here](https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2024-05-01-preview&tabs=HTTP), and get your API key [here](https://learn.microsoft.com/en-us/azure/search/search-security-api-keys?tabs=rest-use%2Cportal-find%2Cportal-query#find-existing-keys).'
 	if (providerName === 'awsBedrock') return 'Connect via a LiteLLM proxy or the AWS [Bedrock-Access-Gateway](https://github.com/aws-samples/bedrock-access-gateway). LiteLLM Bedrock setup docs are [here](https://docs.litellm.ai/docs/providers/bedrock).'
 	if (providerName === 'ollama') return 'Read more about custom [Endpoints here](https://github.com/ollama/ollama/blob/main/docs/faq.md#how-can-i-expose-ollama-on-my-network).'
+	if (providerName === 'llamaCpp') return 'Run GGUF models with [llama.cpp llama-server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server). Axiom starts it on localhost from Local Model Center.'
 	if (providerName === 'vLLM') return 'Read more about custom [Endpoints here](https://docs.vllm.ai/en/latest/getting_started/quickstart.html#openai-compatible-server).'
 	if (providerName === 'lmStudio') return 'Read more about custom [Endpoints here](https://lmstudio.ai/docs/app/api/endpoints/openai).'
 	if (providerName === 'liteLLM') return 'Read more about endpoints [here](https://docs.litellm.ai/docs/providers/openai_compatible).'
@@ -164,6 +168,7 @@ export const displayInfoOfSettingName = (providerName: ProviderName, settingName
 	else if (settingName === 'endpoint') {
 		return {
 			title: providerName === 'ollama' ? 'Endpoint' :
+				providerName === 'llamaCpp' ? 'Endpoint' :
 				providerName === 'vLLM' ? 'Endpoint' :
 					providerName === 'lmStudio' ? 'Endpoint' :
 						providerName === 'openAICompatible' ? 'baseURL' : // (do not include /chat/completions)
@@ -174,12 +179,13 @@ export const displayInfoOfSettingName = (providerName: ProviderName, settingName
 											'(never)',
 
 			placeholder: providerName === 'ollama' ? defaultProviderSettings.ollama.endpoint
-				: providerName === 'vLLM' ? defaultProviderSettings.vLLM.endpoint
-					: providerName === 'openAICompatible' ? 'https://my-website.com/v1'
-						: providerName === 'lmStudio' ? defaultProviderSettings.lmStudio.endpoint
-							: providerName === 'liteLLM' ? 'http://localhost:4000'
-								: providerName === 'awsBedrock' ? 'http://localhost:4000/v1'
-									: '(never)',
+				: providerName === 'llamaCpp' ? defaultProviderSettings.llamaCpp.endpoint
+					: providerName === 'vLLM' ? defaultProviderSettings.vLLM.endpoint
+						: providerName === 'openAICompatible' ? 'https://my-website.com/v1'
+							: providerName === 'lmStudio' ? defaultProviderSettings.lmStudio.endpoint
+								: providerName === 'liteLLM' ? 'http://localhost:4000'
+									: providerName === 'awsBedrock' ? 'http://localhost:4000/v1'
+										: '(never)',
 
 
 		}
@@ -302,6 +308,12 @@ export const defaultSettingsOfProvider: SettingsOfProvider = {
 		...defaultCustomSettings,
 		...defaultProviderSettings.lmStudio,
 		...modelInfoOfDefaultModelNames(defaultModelsOfProvider.lmStudio),
+		_didFillInProviderSettings: undefined,
+	},
+	llamaCpp: {
+		...defaultCustomSettings,
+		...defaultProviderSettings.llamaCpp,
+		...modelInfoOfDefaultModelNames(defaultModelsOfProvider.llamaCpp),
 		_didFillInProviderSettings: undefined,
 	},
 	groq: { // aggregator (serves models from multiple providers)

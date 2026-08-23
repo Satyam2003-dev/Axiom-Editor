@@ -9,7 +9,7 @@ import { registerSingleton, InstantiationType } from '../../../../platform/insta
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 import { IMainProcessService } from '../../../../platform/ipc/common/mainProcessService.js';
 
-export type LocalModelRuntime = 'ollama' | 'lmStudio';
+export type LocalModelRuntime = 'ollama' | 'lmStudio' | 'llamaCpp';
 export type LocalModelFormat = 'gguf' | 'mlx';
 
 export interface LocalModelInfo {
@@ -42,7 +42,7 @@ export interface LocalModelManagerState {
 }
 
 export interface LocalModelOperationProgress {
-	readonly kind: 'ollama-pull' | 'lmstudio-download' | 'lmstudio-load' | 'gguf-download' | 'gguf-import';
+	readonly kind: 'ollama-pull' | 'lmstudio-download' | 'lmstudio-load' | 'gguf-download' | 'gguf-import' | 'llamacpp-start';
 	readonly status: string;
 	readonly completed?: number;
 	readonly total?: number;
@@ -51,11 +51,12 @@ export interface LocalModelOperationProgress {
 export interface ILocalModelService {
 	readonly _serviceBrand: undefined;
 	readonly onDidProgress: Event<LocalModelOperationProgress>;
-	getState(ollamaEndpoint: string, lmStudioEndpoint: string): Promise<LocalModelManagerState>;
+	getState(ollamaEndpoint: string, lmStudioEndpoint: string, llamaCppEndpoint: string): Promise<LocalModelManagerState>;
 	pullOllamaModel(endpoint: string, model: string): Promise<void>;
 	downloadLMStudioModel(model: string, format: LocalModelFormat): Promise<void>;
 	loadLMStudioModel(model: string): Promise<void>;
 	downloadAndImportGGUF(url: string, modelName: string, runtime: LocalModelRuntime, ollamaEndpoint: string): Promise<void>;
+	startLlamaCppModel(endpoint: string, modelPath: string, modelName: string): Promise<void>;
 	cancelActiveOperation(): Promise<void>;
 }
 
@@ -71,11 +72,12 @@ class LocalModelService implements ILocalModelService {
 		this.onDidProgress = this.service.onDidProgress;
 	}
 
-	getState = (ollamaEndpoint: string, lmStudioEndpoint: string) => this.service.getState(ollamaEndpoint, lmStudioEndpoint);
+	getState = (ollamaEndpoint: string, lmStudioEndpoint: string, llamaCppEndpoint: string) => this.service.getState(ollamaEndpoint, lmStudioEndpoint, llamaCppEndpoint);
 	pullOllamaModel = (endpoint: string, model: string) => this.service.pullOllamaModel(endpoint, model);
 	downloadLMStudioModel = (model: string, format: LocalModelFormat) => this.service.downloadLMStudioModel(model, format);
 	loadLMStudioModel = (model: string) => this.service.loadLMStudioModel(model);
 	downloadAndImportGGUF = (url: string, modelName: string, runtime: LocalModelRuntime, ollamaEndpoint: string) => this.service.downloadAndImportGGUF(url, modelName, runtime, ollamaEndpoint);
+	startLlamaCppModel = (endpoint: string, modelPath: string, modelName: string) => this.service.startLlamaCppModel(endpoint, modelPath, modelName);
 	cancelActiveOperation = () => this.service.cancelActiveOperation();
 }
 

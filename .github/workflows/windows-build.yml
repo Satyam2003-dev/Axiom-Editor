@@ -1,4 +1,4 @@
-name: Windows Build
+name: Multi-Platform Release
 
 on:
   workflow_dispatch:
@@ -94,9 +94,85 @@ jobs:
           path: artifacts/*
           if-no-files-found: error
 
+  linux-x64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential g++ libx11-dev libxkbfile-dev libsecret-1-dev libkrb5-dev libnss3-dev libgtk-3-dev libxss-dev libasound2-dev python-is-python3 rpm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build React UI
+        run: npm run buildreact
+      - name: Build Linux x64 application
+        run: npm run gulp vscode-linux-x64
+      - name: Package Linux artifacts
+        run: |
+          mkdir -p artifacts
+          tar -czf "artifacts/Axiom-Editor-linux-x64.tar.gz" -C ../VSCode-linux-x64 .
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Axiom-Editor-linux-x64
+          path: artifacts/*
+          if-no-files-found: error
+      - name: Validate release version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          expected="v$(node -p "JSON.parse(require('fs').readFileSync('product.json','utf8')).axiomVersion")"
+          if [ "${{ github.ref_name }}" != "$expected" ]; then echo "Tag must be $expected to match product.json."; exit 1; fi
+
+  macos:
+    runs-on: macos-14
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build React UI
+        run: npm run buildreact
+      - name: Build macOS app
+        run: npm run gulp vscode-darwin-${{ matrix.arch }}
+      - name: Package macOS app
+        run: |
+          mkdir -p artifacts
+          ditto -c -k --sequesterRsrc --keepParent "../VSCode-darwin-${{ matrix.arch }}/Axiom Editor.app" "artifacts/Axiom-Editor-macos-${{ matrix.arch }}.zip"
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Axiom-Editor-macos-${{ matrix.arch }}
+          path: artifacts/*
+          if-no-files-found: error
+      - name: Validate release version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          expected="v$(node -p "JSON.parse(require('fs').readFileSync('product.json','utf8')).axiomVersion")"
+          if [ "${{ github.ref_name }}" != "$expected" ]; then echo "Tag must be $expected to match product.json."; exit 1; fi
+
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [windows-x64, server-linux-x64]
+    needs: [windows-x64, linux-x64, server-linux-x64, macos]
     runs-on: ubuntu-24.04
     steps:
       - name: Download release artifacts

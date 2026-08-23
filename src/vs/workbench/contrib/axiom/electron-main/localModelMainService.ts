@@ -5,7 +5,7 @@
 
 import { spawn, ChildProcess } from 'child_process';
 import { promises as fs } from 'fs';
-import { basename, join } from 'path';
+import { basename, join, resolve } from 'path';
 import { Emitter } from '../../../../base/common/event.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
 import { IEnvironmentMainService } from '../../../../platform/environment/electron-main/environmentMainService.js';
@@ -20,6 +20,7 @@ export class LocalModelMainService extends Disposable implements ILocalModelServ
 	readonly onDidProgress = this.progressEmitter.event;
 	private activeAbortController: AbortController | undefined;
 	private activeProcess: ChildProcess | undefined;
+	private llamaServerProcess: ChildProcess | undefined;
 
 	constructor(@IEnvironmentMainService private readonly environmentMainService: IEnvironmentMainService) {
 		super();
@@ -88,12 +89,26 @@ export class LocalModelMainService extends Disposable implements ILocalModelServ
 		}
 	}
 
-	async getState(ollamaEndpoint: string, lmStudioEndpoint: string): Promise<LocalModelManagerState> {
+	private async llamaCppStatus(endpoint: string): Promise<LocalRuntimeStatus> {
+		const cliAvailable = await this.commandAvailable('llama-server', ['--help']);
+		const root = trimEndpoint(endpoint).replace(/\/v1$/, '');
+		try {
+			const response = await fetch(`${root}/v1/models`, { signal: AbortSignal.timeout(3000) });
+			if (!response.ok) { throw new Error(`HTTP ${response.status}`); }
+			const data = await response.json() as { data?: Array<{ id?: string }> };
+			const models: LocalModelInfo[] = (data.data ?? []).filter(model => !!model.id).map(model => ({ id: model.id! }));
+			return { runtime: 'llamaCpp', available: true, cliAvailable, endpoint, models };
+		} catch (error) {
+			return { runtime: 'llamaCpp', available: false, cliAvailable, endpoint, models: [], error: errorMessage(error) };
+		}
+	}
+
+	async getState(ollamaEndpoint: string, lmStudioEndpoint: string, llamaCppEndpoint: string): Promise<LocalModelManagerState> {
 		await fs.mkdir(this.modelDirectory, { recursive: true });
-		const [acceleration, ollama, lmStudio] = await Promise.all([
-			this.acceleration(), this.ollamaStatus(ollamaEndpoint), this.lmStudioStatus(lmStudioEndpoint)
+		const [acceleration, ollama, lmStudio, llamaCpp] = await Promise.all([
+			this.acceleration(), this.ollamaStatus(ollamaEndpoint), this.lmStudioStatus(lmStudioEndpoint), this.llamaCppStatus(llamaCppEndpoint)
 		]);
-		return { acceleration, runtimes: [ollama, lmStudio], modelDirectory: this.modelDirectory };
+		return { acceleration, runtimes: [ollama, lmStudio, llamaCpp], modelDirectory: this.modelDirectory };
 	}
 
 	private beginOperation(): AbortController {
@@ -202,6 +217,11 @@ export class LocalModelMainService extends Disposable implements ILocalModelServ
 			throw error;
 		} finally { this.endOperation(); }
 
+		if (runtime === 'llamaCpp') {
+			this.progressEmitter.fire({ kind: 'gguf-import', status: `Saved GGUF for llama.cpp: ${targetPath}` });
+			return;
+		}
+
 		this.progressEmitter.fire({ kind: 'gguf-import', status: `Importing into ${runtime === 'ollama' ? 'Ollama' : 'LM Studio'}` });
 		if (runtime === 'lmStudio') {
 			await this.runCLI('lms', ['import', targetPath, '--copy', '--yes', '--user-repo', `axiom/${safeModelName.replace(/[/:]/g, '-')}`], 'gguf-import');
@@ -213,6 +233,75 @@ export class LocalModelMainService extends Disposable implements ILocalModelServ
 		await this.runCLI('ollama', ['create', safeModelName, '-f', modelfile], 'gguf-import', { ...process.env, OLLAMA_HOST: trimEndpoint(ollamaEndpoint) });
 	}
 
+	private parseLoopbackEndpoint(endpoint: string): { root: string; port: string } {
+		const parsed = new URL(trimEndpoint(endpoint));
+		if (!['http:', 'https:'].includes(parsed.protocol)) { throw new Error('llama.cpp endpoint must be HTTP or HTTPS.'); }
+		if (!['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname)) { throw new Error('Axiom only auto-starts llama.cpp on localhost.'); }
+		const port = parsed.port || (parsed.protocol === 'https:' ? '443' : '80');
+		if (!/^\d{2,5}$/.test(port)) { throw new Error('Enter a valid llama.cpp port.'); }
+		return { root: `${parsed.protocol}//${parsed.host}`, port };
+	}
+
+	private async waitForLlamaServer(root: string, modelName: string): Promise<void> {
+		const started = Date.now();
+		let lastError = '';
+		while (Date.now() - started < 30_000) {
+			try {
+				const response = await fetch(`${root}/v1/models`, { signal: AbortSignal.timeout(1500) });
+				if (response.ok) {
+					this.progressEmitter.fire({ kind: 'llamacpp-start', status: `${modelName} is serving at ${root}/v1` });
+					return;
+				}
+				lastError = `HTTP ${response.status}`;
+			} catch (error) {
+				lastError = errorMessage(error);
+			}
+			await new Promise(resolve => setTimeout(resolve, 750));
+		}
+		throw new Error(`llama-server did not become ready: ${lastError}`);
+	}
+
+	async startLlamaCppModel(endpoint: string, modelPath: string, modelName: string): Promise<void> {
+		const safeModelName = modelName.trim();
+		if (!safeModelName || !/^[a-zA-Z0-9._:/-]+$/.test(safeModelName)) { throw new Error('Enter a safe llama.cpp model name using letters, numbers, dots, dashes, slashes, or colons.'); }
+		const { root, port } = this.parseLoopbackEndpoint(endpoint);
+		const resolvedModelPath = resolve(modelPath.trim());
+		if (!resolvedModelPath.toLowerCase().endsWith('.gguf')) { throw new Error('llama.cpp requires a local .gguf model file.'); }
+		const stat = await fs.stat(resolvedModelPath);
+		if (!stat.isFile()) { throw new Error('The GGUF path must point to a file.'); }
+		if (stat.size < 1024 * 1024) { throw new Error('The GGUF file is unexpectedly small. Check the download before loading it.'); }
+		const controller = this.beginOperation();
+		try {
+			this.llamaServerProcess?.kill();
+			this.progressEmitter.fire({ kind: 'llamacpp-start', status: `Starting llama-server for ${safeModelName}` });
+			const args = ['-m', resolvedModelPath, '--host', '127.0.0.1', '--port', port, '--alias', safeModelName];
+			const child = spawn('llama-server', args, { windowsHide: true, stdio: 'pipe' });
+			this.llamaServerProcess = child;
+			this.activeProcess = child;
+			let output = '';
+			const handle = (data: Buffer) => {
+				const text = data.toString();
+				output = (output + text).slice(-8000);
+				const lastLine = text.trim().split(/\r?\n/).pop();
+				if (lastLine) { this.progressEmitter.fire({ kind: 'llamacpp-start', status: lastLine }); }
+			};
+			child.stdout?.on('data', handle);
+			child.stderr?.on('data', handle);
+			child.once('error', error => {
+				this.progressEmitter.fire({ kind: 'llamacpp-start', status: errorMessage(error) });
+			});
+			child.once('exit', code => {
+				if (this.llamaServerProcess === child) { this.llamaServerProcess = undefined; }
+				if (code !== 0 && this.activeProcess === child) { this.progressEmitter.fire({ kind: 'llamacpp-start', status: `llama-server exited with code ${code}. ${output.trim()}` }); }
+			});
+			controller.signal.addEventListener('abort', () => child.kill(), { once: true });
+			await this.waitForLlamaServer(root, safeModelName);
+		} finally {
+			this.activeAbortController = undefined;
+			this.activeProcess = undefined;
+		}
+	}
+
 	async cancelActiveOperation(): Promise<void> {
 		this.activeAbortController?.abort();
 		this.activeProcess?.kill();
@@ -221,6 +310,7 @@ export class LocalModelMainService extends Disposable implements ILocalModelServ
 	override dispose(): void {
 		this.activeAbortController?.abort();
 		this.activeProcess?.kill();
+		this.llamaServerProcess?.kill();
 		super.dispose();
 	}
 }
